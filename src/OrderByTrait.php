@@ -12,13 +12,13 @@ trait OrderByTrait
      * @param string  $direction
      * @return mixed
      */
-    public function scopeOrderBy($query, $field = '', $direction = '')
+    public function scopeOrder($query, $field = '', $direction = '')
     {
         if (isset($this->default_order_by) && empty($field)) {
             $field = $this->default_order_by;
         }
 
-        if (isset($this->default_order_by) && empty($direction)) {
+        if (isset($this->default_order_direction) && empty($direction)) {
             $direction = $this->default_order_direction;
         }
 
