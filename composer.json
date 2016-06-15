@@ -1,0 +1,26 @@
+{
+    "name": "bluora/laravel-model-traits",
+    "description": "Provides a collection of useful traits for Laravel Eloquent models.",
+    "keywords": ["laravel","illuminate","eloquent","uuid"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Rocco Howard",
+            "email": "rocco@bluora.com.au"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.*",
+        "illuminate/database": "4.*|5.*",
+        "symfony/process": "~2.3",
+        "codeclimate/php-test-reporter": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bluora\\LarvelModelTraits\\": "src/"
+        }
+    }
+}
