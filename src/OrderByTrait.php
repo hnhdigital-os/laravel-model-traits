@@ -22,9 +22,15 @@ trait OrderByTrait
             $direction = $this->default_order_direction;
         }
 
-        if (!empty($field) && !empty($direction)) {
+        if (empty($direction)) {
+            $direction = 'asc';
+        }
+
+        if (!empty($field)) {
             return $query->orderBy($field, $direction);
         }
+
         return $query;
     }
+
 }
