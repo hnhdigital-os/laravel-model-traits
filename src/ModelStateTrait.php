@@ -12,7 +12,7 @@ trait ModelStateTrait
      */
     public function scopeActive($query, $type = true)
     {
-        return $query->archived(false)->deleted(false);
+        return $query->archived(!$type)->deleted(false);
     }
 
     /**

@@ -7,10 +7,10 @@ trait OrderByTrait
     /**
      * Provide a standard method for ordering a model.
      *
-     * @param Builder instance $query
+     * @param \Illuminate\Database\Eloquent\Builder $query
      * @param string  $field
      * @param string  $direction
-     * @return mixed
+     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeOrder($query, $field = '', $direction = '')
     {

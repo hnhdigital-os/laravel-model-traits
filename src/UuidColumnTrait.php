@@ -9,7 +9,6 @@ trait UuidColumnTrait
      *
      * @param string $key
      * @param mixed  $value
-     *
      * @return mixed
      */
     protected function castAttribute($key, $value)
@@ -33,8 +32,7 @@ trait UuidColumnTrait
      *
      * @param string $column
      * @param mixed  $value
-     *
-     * @return mixed
+     * @return \Illuminate\Database\Eloquent\Builder
      */
     public static function whereUuid($column, $value)
     {
@@ -46,8 +44,7 @@ trait UuidColumnTrait
      *
      * @param string $column
      * @param mixed  $value
-     *
-     * @return mixed
+     * @return \Illuminate\Database\Eloquent\Builder
      */
     public static function whereUuidIn($column, $value)
     {
