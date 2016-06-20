@@ -26,24 +26,18 @@ class User extends Model
 }
 ```
 
-### UUID Support
+### Model state (Active, Archived, Deleted) Support
 
-Adds support for the UUID datatype column for models provided by the [Eloquent ORM](http://laravel.com/docs/eloquent).
+Adds support for functions relating to the state of a model provided by the [Eloquent ORM](http://laravel.com/docs/eloquent).
 
 The feature is exposed through a trait by casting your UUID columns as `uuid`.
 
 ```php
-use Bluora\\LarvelModelTraits\\UuidColumnTrait;
+use Bluora\\LarvelModelTraits\\ModelStateTrait;
 
 class User extends Model
 {
-    use UuidColumnTrait;
+    use ModelStateTrait;
 
-    protected $casts = [
-        'id' => 'integer',
-        'uuid' => 'uuid'
-    ];
 }
 ```
-
-You can then query the UUID column through `whereUuid` (single uuid) and `whereUuidIn` (many uuid's) methods.

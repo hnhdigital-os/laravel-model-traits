@@ -5,6 +5,28 @@ namespace Bluora\LarvelModelTraits;
 trait ModelStateTrait
 {
 
+    public static $mode_active = '0';
+    public static $mode_archived = '1';
+    public static $mode_deleted = '2';
+
+    /**
+     * Scope a query to only include active models.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeMode($query, $mode = '0')
+    {
+        switch ($mode) {
+            case static::$mode_archived:
+                return $query->archived();
+            case static::$mode_deleted:
+                return $query->deleted();
+            case static::$mode_active:
+            default:
+                return $query->active();
+        }
+    }
+
     /**
      * Scope a query to only include active models.
      *
@@ -12,7 +34,7 @@ trait ModelStateTrait
      */
     public function scopeActive($query, $type = true)
     {
-        return $query->archived(!$type)->deleted(false);
+        return $query->archived(!$type);
     }
 
     /**
@@ -22,6 +44,7 @@ trait ModelStateTrait
      */
     public function scopeArchived($query, $type = true)
     {
+        $query->whereNull('deleted_at');
         if ($type === true) {
             return $query->whereNotNull('archived_at');
         }
