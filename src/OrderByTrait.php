@@ -1,6 +1,6 @@
 <?php
 
-namespace Bluora\LarvelModelTraits;
+namespace Bluora\LaravelModelTraits;
 
 trait OrderByTrait
 {
