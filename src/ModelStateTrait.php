@@ -10,22 +10,22 @@ trait ModelStateTrait
 
     public function getStateCreatedAtColumn()
     {
-        return 'created_at';
+        return $this->table.'.created_at';
     }
 
     public function getStateUpdatedAtColumn()
     {
-        return 'updated_at';
+        return $this->table.'.updated_at';
     }
 
     public function getStateArchivedAtColumn()
     {
-        return 'archived_at';
+        return $this->table.'.archived_at';
     }
 
     public function getStateDeletedAtColumn()
     {
-        return 'deleted_at';
+        return $this->table.'.deleted_at';
     }
 
     public static $mode_active = '0';
@@ -39,16 +39,67 @@ trait ModelStateTrait
      */
     public function scopeMode($query, $mode = '0')
     {
-        $query->withoutGlobalScope(SoftDeletingScope::class);
+        $query = $query->withoutGlobalScope(SoftDeletingScope::class);
         switch ($mode) {
             case static::$mode_archived:
-                return $query->archived();
+                $query = $query->archived();
+                break;
             case static::$mode_deleted:
-                return $query->deleted();
+                $query = $query->deleted();
+                break;
             case static::$mode_active:
             default:
-                return $query->active();
+                $query = $query->active();
+                break;
         }
+        return $query;
+    }
+
+    /**
+     * Scope a query to only include active models.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeActive($query, $type = true)
+    {
+        return $query->archived(!$type);
+    }
+
+    /**
+     * Scope a query to only include archived models.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeArchived($query, $type = true)
+    {
+        if (static::getStateDeletedAtColumn()) {
+            $query = $query->whereNull(static::getStateDeletedAtColumn());
+        }
+        if (static::getStateArchivedAtColumn()) {
+            if ($type === true) {
+                $query = $query->whereNotNull(static::getStateArchivedAtColumn());
+            } else {
+                $query = $query->whereNull(static::getStateArchivedAtColumn());
+            }
+        }
+        return $query;
+    }
+
+    /**
+     * Scope a query to only include deleted models.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeDeleted($query, $type = true)
+    {
+        if (static::getStateDeletedAtColumn()) {
+            if ($type === true) {
+                $query = $query->whereNotNull(static::getStateDeletedAtColumn());
+            } else {
+                $query = $query->whereNull(static::getStateDeletedAtColumn());
+            }
+        }
+        return $query;
     }
 
     /**
@@ -67,7 +118,6 @@ trait ModelStateTrait
         if (static::getStateArchivedAtColumn() || static::getStateDeletedAtColumn()) {
             $this->save();
         }
-        return $this;
     }
 
     /**
@@ -81,7 +131,6 @@ trait ModelStateTrait
             $this->{static::getStateArchivedAtColumn()} = Carbon::now()->toDateTimeString();
             $this->save();
         }
-        return $this;
     }
 
     /**
@@ -95,7 +144,6 @@ trait ModelStateTrait
             $this->{static::getStateDeletedAtColumn()} = Carbon::now()->toDateTimeString();
             $this->save();
         }
-        return $this;
     }
 
     /**
@@ -128,51 +176,6 @@ trait ModelStateTrait
     public function getIsDeletedAttribute()
     {
         return (!is_null($this->{static::getStateDeletedAtColumn()}));
-    }
-
-    /**
-     * Scope a query to only include active models.
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeActive($query, $type = true)
-    {
-        return $query->archived(!$type);
-    }
-
-    /**
-     * Scope a query to only include archived models.
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeArchived($query, $type = true)
-    {
-        if (static::getStateDeletedAtColumn()) {
-            $query->whereNull(static::getStateDeletedAtColumn());
-        }
-        if (static::getStateArchivedAtColumn()) {
-            if ($type === true) {
-                return $query->whereNotNull(static::getStateArchivedAtColumn());
-            }
-            return $query->whereNull(static::getStateArchivedAtColumn());
-        }
-        return $query;
-    }
-
-    /**
-     * Scope a query to only include deleted models.
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeDeleted($query, $type = true)
-    {
-        if (static::getStateDeletedAtColumn()) {
-            if ($type === true) {
-                return $query->whereNotNull(static::getStateDeletedAtColumn());
-            }
-            return $query->whereNull(static::getStateDeletedAtColumn());
-        }
-        return $query;
     }
 
 }

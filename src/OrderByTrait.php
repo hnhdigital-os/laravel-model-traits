@@ -30,7 +30,7 @@ trait OrderByTrait
             return $query->orderBy($field, $direction);
         }
 
-        return $query;
+        return $this;
     }
 
 }
