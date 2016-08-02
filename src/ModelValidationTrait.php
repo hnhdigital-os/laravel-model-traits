@@ -7,6 +7,10 @@ use Validator;
 trait ModelValidationTrait
 {
 
+    public static $RULE_SOURCE_NEW = 0;
+    public static $RULE_SOURCE_UPDATE = 1;
+    public static $RULE_SOURCE_FORMAT = 2;
+
     /**
      * Create model and allocation values.
      *
@@ -29,9 +33,8 @@ trait ModelValidationTrait
     {
         $rules = $this->buildValidationArray($existing_model, $request_values);
         $validator = Validator::make($request_values, $rules);
-
         if ($validator->fails()) {
-            return $validator->errors()->all();
+            return [true, $validator];
         }
 
         foreach ($rules as $attribute_name => $validation) {
@@ -40,6 +43,119 @@ trait ModelValidationTrait
             }
         }
         return $this;
+    }
+
+    /**
+     * Process a new model.
+     *
+     * @param  array  $update_data
+     * @param  Illuminate\Database\Eloquent\Model $model
+     * @param  array  $options
+     * @return mixed
+     */
+    public static function processNew($update_data, $options = [])
+    {
+        $result = [
+            'is_error' => true,
+            'feedback' => 'Validation of inputs failed.',
+            'toastr' => 'error',
+            'timeout' => 5000,
+            'fields' => []
+        ];
+
+        $model = static::createModel($update_data);
+        $model_class = get_class($model);
+
+        // Validation failed.
+        if (is_array($model) && $model[0] == true) {
+            $result['fields'] = array_keys($model[1]->errors()->messages());
+            $result['feedback'] = implode('; ', $model[1]->errors()->all());
+        } else {
+            $model->save();
+
+            if (isset($options['extra_changes'])) {
+                $options['extra_changes']($model, $update_data);
+            }
+
+            if (($model_id = $model->id) > 0) {
+                $model = $model_class::where('id', '=', $model_id)->first();
+                if (isset($options['event']) && class_exists('App\\Events\\'.$options['event'])) {
+                    $event = 'App\\Events\\'.$options['event'];
+                    event(new $event($model));
+                }
+                header('X-FORCE_FRONTEND_REDIRECT: 1');
+                return route($options['success_route'], $options['success_paramaters']);
+            }
+            $result['feedback'] = 'Failed to create book grouping.';
+        }
+
+        return $result;
+    }
+
+    /**
+     * Process a save.
+     *
+     * @param  array  $update_data
+     * @param  array  $options
+     * @return mixed
+     */
+    public function processSave($update_data, $options = [])
+    {
+        $result = [
+            'is_error' => true,
+            'feedback' => 'Validation of inputs failed.',
+            'toastr' => 'error',
+            'timeout' => 5000,
+            'fields' => [],
+            'changes' => []
+        ];
+
+        $model = $this->validateInput($update_data);
+        if (is_array($model) && $model[0] == true) {
+            $result['fields'] = array_keys($model[1]->errors()->messages());
+            $result['feedback'] = implode('; ', $model[1]->errors()->all());
+        } else {
+
+            $result = [
+                'is_error' => false,
+                'feedback' => 'Changes sucessfully made.',
+                'toastr' => 'success',
+                'timeout' => 2000,
+                'changes' => []
+            ];
+
+            if ($changes = $this->getDirty()) {
+                $this->save();
+                if (isset($options['event']) && class_exists('App\\Events\\'.$options['event'])) {
+                    $event = 'App\\Events\\'.$options['event'];
+                    event(new $event($this));
+                }
+                $result['changes'] = $changes;
+            } else {
+                $result['toastr'] = 'info';
+                $result['feedback'] = 'No changes were made.';
+            }
+
+            if (request()->ajax()) {
+                return $result;
+            }
+        }
+
+        if (request()->ajax()) {
+            return $result;
+        } else {
+            session()->flash('toastr', $result['toastr']);
+            session()->flash('timeout', $result['timeout']);
+            session()->flash('is_error', $result['is_error']);
+            session()->flash('feedback', $result['feedback']);
+            session()->flash('fields', $result['fields']);
+
+            if (!isset($options['success_paramaters'])) {
+                $options['success_paramaters'] = [];
+            }
+
+            return redirect()->route($options['success_route'], $options['success_paramaters']);
+        }
     }
 
     /**
@@ -55,14 +171,25 @@ trait ModelValidationTrait
         if (isset($this->attribute_rules)) {
             foreach ($this->attribute_rules as $attribute_name => $available_rules) {
                 $rules[$attribute_name] = [];
-                $source = ($existing_model) ? 1 : 0;
+                $source = ($existing_model) ? static::$RULE_SOURCE_UPDATE : static::$RULE_SOURCE_NEW;
+                $source_style = $existing_model;
+
+                if (isset($request_values[$attribute_name]) && empty($request_values[$attribute_name])) {
+                    $source = static::$RULE_SOURCE_NEW;
+                    $source_style = false;
+                }
 
                 // Allocate rule for new or existing model
-                (isset($available_rules[$source]) && !empty($available_rules[$source])) ? 
-                    $rules[$attribute_name][] = $available_rules[$source] : ($existing_model) ? $rules[$attribute_name][] = 'sometimes' : false;
+                if (isset($available_rules[$source]) && !empty($available_rules[$source])) {
+                    $rules[$attribute_name][] = $available_rules[$source];
+                }
+
+                if ($source_style && $source == static::$RULE_SOURCE_UPDATE) {
+                    $rules[$attribute_name][] = 'sometimes';
+                }
 
                 // Add the value type
-                (isset($available_rules[2]) && !empty($available_rules[2])) ? $rules[$attribute_name][] = $available_rules[2] : false;
+                (isset($available_rules[static::$RULE_SOURCE_FORMAT]) && !empty($available_rules[static::$RULE_SOURCE_FORMAT])) ? $rules[$attribute_name][] = $available_rules[static::$RULE_SOURCE_FORMAT] : false;
 
                 // Stringify the array of rules
                 $rules[$attribute_name] = implode('|', $rules[$attribute_name]);
@@ -79,7 +206,7 @@ trait ModelValidationTrait
                 }
 
                 // Cast empty value
-                elseif (!empty($available_rules[$source]) && !empty($available_rules[2])) {
+                elseif (!empty($available_rules[$source]) && !empty($available_rules[static::$RULE_SOURCE_FORMAT])) {
                     $request_values[$attribute_name] = $this->applyValidationCasting('', $rules[$attribute_name]);
                 }
             }
