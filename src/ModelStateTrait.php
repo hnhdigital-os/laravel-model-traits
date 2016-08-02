@@ -8,24 +8,38 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 trait ModelStateTrait
 {
 
+    /**
+     * Remove soft delete scope
+     * @return void
+     */
+    public static function bootModelStateTrait()
+    {
+        static::addGlobalScope(new ModelStateScope);
+    }
+
     public function getStateCreatedAtColumn()
     {
-        return $this->table.'.created_at';
+        return 'created_at';
     }
 
     public function getStateUpdatedAtColumn()
     {
-        return $this->table.'.updated_at';
+        return 'updated_at';
     }
 
     public function getStateArchivedAtColumn()
     {
-        return $this->table.'.archived_at';
+        return 'archived_at';
     }
 
     public function getStateDeletedAtColumn()
     {
-        return $this->table.'.deleted_at';
+        return 'deleted_at';
+    }
+
+    public function getColumnWithTable($column)
+    {
+        return $this->table.'.'.$column;
     }
 
     public static $mode_active = '0';
@@ -39,7 +53,7 @@ trait ModelStateTrait
      */
     public function scopeMode($query, $mode = '0')
     {
-        $query = $query->withoutGlobalScope(SoftDeletingScope::class);
+        $query->withoutGlobalScope(SoftDeletingScope::class);
         switch ($mode) {
             case static::$mode_archived:
                 $query = $query->archived();
@@ -73,13 +87,13 @@ trait ModelStateTrait
     public function scopeArchived($query, $type = true)
     {
         if (static::getStateDeletedAtColumn()) {
-            $query = $query->whereNull(static::getStateDeletedAtColumn());
+            $query = $query->whereNull(static::getColumnWithTable(static::getStateDeletedAtColumn()));
         }
         if (static::getStateArchivedAtColumn()) {
             if ($type === true) {
-                $query = $query->whereNotNull(static::getStateArchivedAtColumn());
+                $query = $query->whereNotNull(static::getColumnWithTable(static::getStateArchivedAtColumn()));
             } else {
-                $query = $query->whereNull(static::getStateArchivedAtColumn());
+                $query = $query->whereNull(static::getColumnWithTable(static::getStateArchivedAtColumn()));
             }
         }
         return $query;
@@ -94,9 +108,9 @@ trait ModelStateTrait
     {
         if (static::getStateDeletedAtColumn()) {
             if ($type === true) {
-                $query = $query->whereNotNull(static::getStateDeletedAtColumn());
+                $query = $query->whereNotNull(static::getColumnWithTable(static::getStateDeletedAtColumn()));
             } else {
-                $query = $query->whereNull(static::getStateDeletedAtColumn());
+                $query = $query->whereNull(static::getColumnWithTable(static::getStateDeletedAtColumn()));
             }
         }
         return $query;
@@ -129,6 +143,9 @@ trait ModelStateTrait
     {
         if (static::getStateArchivedAtColumn()) {
             $this->{static::getStateArchivedAtColumn()} = Carbon::now()->toDateTimeString();
+            if (static::getStateDeletedAtColumn()) {
+                $this->{static::getStateDeletedAtColumn()} = null;
+            }
             $this->save();
         }
     }
@@ -146,6 +163,11 @@ trait ModelStateTrait
         }
     }
 
+    public function removeModel()
+    {
+        $this->deleteModel();
+    }
+
     /**
      * Is this model active?
      * 
@@ -153,8 +175,8 @@ trait ModelStateTrait
      */
     public function getIsActiveAttribute()
     {
-        return (is_null($this->{static::getStateArchivedAtColumn()})
-            && is_null($this->{static::getStateDeletedAtColumn()}));
+        return (is_null($this->{static::getStateArchivedAtColumn(false)})
+            && is_null($this->{static::getStateDeletedAtColumn(false)}));
     }
 
     /**
@@ -164,8 +186,8 @@ trait ModelStateTrait
      */
     public function getIsArchivedAttribute()
     {
-        return (!is_null($this->{static::getStateArchivedAtColumn()})
-            && is_null($this->{static::getStateDeletedAtColumn()}));
+        return (!is_null($this->{static::getStateArchivedAtColumn(false)})
+            && is_null($this->{static::getStateDeletedAtColumn(false)}));
     }
 
     /**
@@ -175,7 +197,34 @@ trait ModelStateTrait
      */
     public function getIsDeletedAttribute()
     {
-        return (!is_null($this->{static::getStateDeletedAtColumn()}));
+        return (!is_null($this->{static::getStateDeletedAtColumn(false)}));
+    }
+
+    /**
+     * Is this model removed?
+     * Alias for deleted.
+     * 
+     * @return string
+     */
+    public function getIsRemovedAttribute()
+    {
+        return $this->is_deleted;
+    }
+
+    /**
+     * Is this model active?
+     * 
+     * @return string
+     */
+    public function getStateNameAttribute()
+    {
+        if ($this->is_active) {
+            return 'active';
+        } elseif ($this->is_archived) {
+            return 'archived';
+        } else {
+            return 'removed';
+        }
     }
 
 }
