@@ -83,10 +83,24 @@ trait ModelValidationTrait
                     $event = 'App\\Events\\'.$options['event'];
                     event(new $event($model));
                 }
-                header('X-FORCE_FRONTEND_REDIRECT: 1');
-                return route($options['success_route'], $options['success_paramaters']);
+
+                $result = [
+                    'is_error' => false,
+                    'feedback' => 'Created sucessfully.',
+                    'toastr' => 'success',
+                    'timeout' => 2000,
+                    'fields' => [],
+                    'model' => $model,
+                    'uuid' => $model->uuid
+                ];
+
+                if (!empty($options['success_route'])) {
+                    header('X-FORCE_FRONTEND_REDIRECT: 1');
+                    return route(array_get($options, 'success_route', 'home'), array_get($options, 'success_paramaters', []));
+                }
+            } else {
+                $result['feedback'] = 'Failed to create record.';
             }
-            $result['feedback'] = 'Failed to create book grouping.';
         }
 
         return $result;
@@ -135,15 +149,10 @@ trait ModelValidationTrait
                 $result['toastr'] = 'info';
                 $result['feedback'] = 'No changes were made.';
             }
-
-            if (request()->ajax()) {
-                return $result;
-            }
         }
 
-        if (request()->ajax()) {
-            return $result;
-        } else {
+        // If normal web request and a route is provided on success
+        if (!request()->ajax() && !empty($options['success_route'])) {
             session()->flash('toastr', $result['toastr']);
             session()->flash('timeout', $result['timeout']);
             session()->flash('is_error', $result['is_error']);
@@ -154,8 +163,9 @@ trait ModelValidationTrait
                 $options['success_paramaters'] = [];
             }
 
-            return redirect()->route($options['success_route'], $options['success_paramaters']);
+            return redirect()->route(array_get($options, 'success_route', 'home'), array_get($options, 'success_paramaters', []));
         }
+        return $result;
     }
 
     /**
