@@ -71,17 +71,20 @@ trait ModelValidationTrait
             $result['fields'] = array_keys($model[1]->errors()->messages());
             $result['feedback'] = implode('; ', $model[1]->errors()->all());
         } else {
-            $model->save();
-
-            if (isset($options['extra_changes'])) {
-                $options['extra_changes']($model, $update_data);
+            if (isset($options['on_saving'])) {
+                $options['on_saving']($model);
             }
+            $model->save();
 
             if (($model_id = $model->id) > 0) {
                 $model = $model_class::where('id', '=', $model_id)->first();
                 if (isset($options['event']) && class_exists('App\\Events\\'.$options['event'])) {
                     $event = 'App\\Events\\'.$options['event'];
                     event(new $event($model));
+                }
+
+                if (isset($options['on_created'])) {
+                    $options['on_created']($model);
                 }
 
                 $result = [
@@ -96,7 +99,7 @@ trait ModelValidationTrait
 
                 if (!empty($options['success_route'])) {
                     header('X-FORCE_FRONTEND_REDIRECT: 1');
-                    return route(array_get($options, 'success_route', 'home'), array_get($options, 'success_paramaters', []));
+                    return route(array_get($options, 'success_route', 'home'), [$model->getTable() => $model->uuid]);
                 }
             } else {
                 $result['feedback'] = 'Failed to create record.';
