@@ -8,8 +8,9 @@ trait OrderByTrait
      * Provide a standard method for ordering a model.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string  $field
-     * @param string  $direction
+     * @param string                                $field
+     * @param string                                $direction
+     *
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeOrder($query, $field = '', $direction = '')
@@ -32,5 +33,4 @@ trait OrderByTrait
 
         return $this;
     }
-
 }
