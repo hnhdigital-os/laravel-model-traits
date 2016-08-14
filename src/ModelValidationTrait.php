@@ -6,7 +6,6 @@ use Validator;
 
 trait ModelValidationTrait
 {
-
     public static $RULE_SOURCE_NEW = 0;
     public static $RULE_SOURCE_UPDATE = 1;
     public static $RULE_SOURCE_FORMAT = 2;
@@ -14,19 +13,22 @@ trait ModelValidationTrait
     /**
      * Create model and allocation values.
      *
-     * @param  array  $request_values
+     * @param array $request_values
+     *
      * @return mixed
      */
     public static function createModel($request_values)
     {
-        $model = (new static);
+        $model = (new static());
+
         return $model->validateInput($request_values, false);
     }
 
     /**
      * Validate input.
      *
-     * @param  array  $request_values 
+     * @param array $request_values
+     *
      * @return mixed
      */
     public function validateInput($request_values, $existing_model = true)
@@ -42,15 +44,17 @@ trait ModelValidationTrait
                 $this->{$attribute_name} = $request_values[$attribute_name];
             }
         }
+
         return $this;
     }
 
     /**
      * Process a new model.
      *
-     * @param  array  $update_data
-     * @param  Illuminate\Database\Eloquent\Model $model
-     * @param  array  $options
+     * @param array                              $update_data
+     * @param Illuminate\Database\Eloquent\Model $model
+     * @param array                              $options
+     *
      * @return mixed
      */
     public static function processNew($update_data, $options = [])
@@ -58,9 +62,9 @@ trait ModelValidationTrait
         $result = [
             'is_error' => true,
             'feedback' => 'Validation of inputs failed.',
-            'toastr' => 'error',
-            'timeout' => 5000,
-            'fields' => []
+            'toastr'   => 'error',
+            'timeout'  => 5000,
+            'fields'   => [],
         ];
 
         $model = static::createModel($update_data);
@@ -90,15 +94,16 @@ trait ModelValidationTrait
                 $result = [
                     'is_error' => false,
                     'feedback' => 'Created sucessfully.',
-                    'toastr' => 'success',
-                    'timeout' => 2000,
-                    'fields' => [],
-                    'model' => $model,
-                    'uuid' => $model->uuid
+                    'toastr'   => 'success',
+                    'timeout'  => 2000,
+                    'fields'   => [],
+                    'model'    => $model,
+                    'uuid'     => $model->uuid,
                 ];
 
                 if (!empty($options['success_route'])) {
                     header('X-FORCE_FRONTEND_REDIRECT: 1');
+
                     return route(array_get($options, 'success_route', 'home'), [$model->getTable() => $model->uuid]);
                 }
             } else {
@@ -112,8 +117,9 @@ trait ModelValidationTrait
     /**
      * Process a save.
      *
-     * @param  array  $update_data
-     * @param  array  $options
+     * @param array $update_data
+     * @param array $options
+     *
      * @return mixed
      */
     public function processSave($update_data, $options = [])
@@ -121,10 +127,10 @@ trait ModelValidationTrait
         $result = [
             'is_error' => true,
             'feedback' => 'Validation of inputs failed.',
-            'toastr' => 'error',
-            'timeout' => 5000,
-            'fields' => [],
-            'changes' => []
+            'toastr'   => 'error',
+            'timeout'  => 5000,
+            'fields'   => [],
+            'changes'  => [],
         ];
 
         $model = $this->validateInput($update_data);
@@ -132,13 +138,12 @@ trait ModelValidationTrait
             $result['fields'] = array_keys($model[1]->errors()->messages());
             $result['feedback'] = implode('; ', $model[1]->errors()->all());
         } else {
-
             $result = [
                 'is_error' => false,
                 'feedback' => 'Changes sucessfully made.',
-                'toastr' => 'success',
-                'timeout' => 2000,
-                'changes' => []
+                'toastr'   => 'success',
+                'timeout'  => 2000,
+                'changes'  => [],
             ];
 
             if ($changes = $this->getDirty()) {
@@ -168,14 +173,16 @@ trait ModelValidationTrait
 
             return redirect()->route(array_get($options, 'success_route', 'home'), array_get($options, 'success_paramaters', []));
         }
+
         return $result;
     }
 
     /**
      * Build the validation rules for this model.
      *
-     * @param  boolean $existing_model
-     * @param  array $request_values
+     * @param bool  $existing_model
+     * @param array $request_values
+     *
      * @return array
      */
     private function buildValidationArray($existing_model, &$request_values)
@@ -211,7 +218,7 @@ trait ModelValidationTrait
                 if (isset($available_rules[$source]) && $available_rules[$source] === false) {
                     unset($request_values[$attribute_name]);
                     unset($rules[$attribute_name]);
-                } 
+                }
 
                 // Cast the provided value
                 elseif (isset($request_values[$attribute_name])) {
@@ -225,14 +232,16 @@ trait ModelValidationTrait
             }
         }
         $request_values = array_only($request_values, array_keys($rules));
+
         return $rules;
     }
 
     /**
      * Apply casting if it is present in the rule.
-     * 
-     * @param  mixed $value
-     * @param  string $rules
+     *
+     * @param mixed  $value
+     * @param string $rules
+     *
      * @return mixed
      */
     private function applyValidationCasting($value, $rules)
@@ -242,14 +251,13 @@ trait ModelValidationTrait
         }
 
         if (stripos($rules, 'boolean') !== false) {
-            $value = (int)$value;
+            $value = (int) $value;
         }
 
         if (stripos($rules, 'string') !== false) {
-            $value = (string)$value;
+            $value = (string) $value;
         }
 
         return $value;
     }
-
 }
