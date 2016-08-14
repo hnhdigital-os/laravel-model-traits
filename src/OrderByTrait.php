@@ -2,6 +2,8 @@
 
 namespace Bluora\LaravelModelTraits;
 
+use DB;
+
 trait OrderByTrait
 {
     /**
@@ -28,7 +30,7 @@ trait OrderByTrait
         }
 
         if (!empty($field)) {
-            return $query->orderBy($field, $direction);
+            return $query->orderBy(DB::raw($field), $direction);
         }
 
         return $this;
