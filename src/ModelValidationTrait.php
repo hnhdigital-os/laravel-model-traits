@@ -158,6 +158,10 @@ trait ModelValidationTrait
                 'changes'  => [],
             ];
 
+            if (isset($options['on_saving'])) {
+                $options['on_saving']($this, $update_data);
+            }
+
             if ($changes = $this->getDirty()) {
                 $this->save();
                 if (isset($options['event']) && class_exists('App\\Events\\'.$options['event'])) {
@@ -165,6 +169,10 @@ trait ModelValidationTrait
                     event(new $event($this));
                 }
                 $result['changes'] = $changes;
+
+                if (isset($options['on_saved'])) {
+                    $options['on_saved']($model, $update_data);
+                }
             } else {
                 $result['toastr'] = 'info';
                 $result['feedback'] = 'No changes were made.';
