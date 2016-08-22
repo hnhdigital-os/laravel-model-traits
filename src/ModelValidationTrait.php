@@ -82,7 +82,7 @@ trait ModelValidationTrait
             $result['feedback'] = implode('; ', $model[1]->errors()->all());
         } else {
             if (isset($options['on_saving'])) {
-                $options['on_saving']($model);
+                $options['on_saving']($model, $update_data);
             }
             $model->save();
 
@@ -94,7 +94,7 @@ trait ModelValidationTrait
                 }
 
                 if (isset($options['on_created'])) {
-                    $options['on_created']($model);
+                    $options['on_created']($model, $update_data);
                 }
 
                 $result = [
