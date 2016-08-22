@@ -67,6 +67,12 @@ trait ModelValidationTrait
             'fields'   => [],
         ];
 
+        if (isset($options['validation'])) {
+            if (!$options['validation']($update_data)) {
+                return $result;
+            }
+        }
+
         $model = static::createModel($update_data);
         $model_class = get_class($model);
 
@@ -132,6 +138,12 @@ trait ModelValidationTrait
             'fields'   => [],
             'changes'  => [],
         ];
+
+        if (isset($options['validation'])) {
+            if (!$options['validation']($update_data)) {
+                return $result;
+            }
+        }
 
         $model = $this->validateInput($update_data);
         if (is_array($model) && $model[0] == true) {
