@@ -162,7 +162,9 @@ trait ModelValidationTrait
                 $options['on_saving']($this, $update_data);
             }
 
-            if ($changes = $this->getDirty()) {
+            $dirty_check = (method_exists($this, 'preDirtyCheck')) ? 'preDirtyCheck' : 'getDirty';
+
+            if ($changes = $this->$dirty_check()) {
                 $this->save();
                 if (isset($options['event']) && class_exists('App\\Events\\'.$options['event'])) {
                     $event = 'App\\Events\\'.$options['event'];
