@@ -51,9 +51,9 @@ trait ModelValidationTrait
     /**
      * Process a new model.
      *
-     * @param array                              $update_data
-     * @param Illuminate\Database\Eloquent\Model $model
-     * @param array                              $options
+     * @param array $update_data
+     * @param Model $model
+     * @param array $options
      *
      * @return mixed
      */
@@ -81,7 +81,7 @@ trait ModelValidationTrait
             $result['fields'] = array_keys($model[1]->errors()->messages());
             $result['feedback'] = implode('; ', $model[1]->errors()->all());
         } else {
-            if (isset($options['on_saving'])) {
+            if (isset($options['on_saving']) && $options['on_saving'] instanceof \Closure) {
                 $options['on_saving']($model, $update_data);
             }
             $model->save();
@@ -93,7 +93,7 @@ trait ModelValidationTrait
                     event(new $event($model));
                 }
 
-                if (isset($options['on_created'])) {
+                if (isset($options['on_created']) && $options['on_created'] instanceof \Closure) {
                     $options['on_created']($model, $update_data);
                 }
 
@@ -158,7 +158,7 @@ trait ModelValidationTrait
                 'changes'  => [],
             ];
 
-            if (isset($options['on_saving'])) {
+            if (isset($options['on_saving']) && $options['on_saving'] instanceof \Closure) {
                 $options['on_saving']($this, $update_data);
             }
 
@@ -172,7 +172,7 @@ trait ModelValidationTrait
                 }
                 $result['changes'] = $changes;
 
-                if (isset($options['on_saved'])) {
+                if (isset($options['on_saved']) && $options['on_saved'] instanceof \Closure) {
                     $options['on_saved']($model, $update_data);
                 }
             } else {
