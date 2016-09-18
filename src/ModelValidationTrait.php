@@ -88,10 +88,6 @@ trait ModelValidationTrait
 
             if (($model_id = $model->id) > 0) {
                 $model = $model_class::where('id', '=', $model_id)->first();
-                if (isset($options['event']) && class_exists('App\\Events\\'.$options['event'])) {
-                    $event = 'App\\Events\\'.$options['event'];
-                    event(new $event($model));
-                }
 
                 if (isset($options['on_created']) && $options['on_created'] instanceof \Closure) {
                     $options['on_created']($model, $update_data);
@@ -166,10 +162,6 @@ trait ModelValidationTrait
 
             if ($changes = $this->$dirty_check()) {
                 $this->save();
-                if (isset($options['event']) && class_exists('App\\Events\\'.$options['event'])) {
-                    $event = 'App\\Events\\'.$options['event'];
-                    event(new $event($this));
-                }
                 $result['changes'] = $changes;
 
                 if (isset($options['on_saved']) && $options['on_saved'] instanceof \Closure) {
