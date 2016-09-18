@@ -74,6 +74,10 @@ trait ModelValidationTrait
         }
 
         $model = static::createModel($update_data);
+
+        if (is_array($model)) {
+            return $result;
+        }
         $model_class = get_class($model);
 
         // Validation failed.
