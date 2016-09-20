@@ -265,7 +265,7 @@ trait ModelValidationTrait
     private function applyValidationCasting($value, $rules)
     {
         if (stripos($rules, 'json') !== false) {
-            $value = json_encode($value);
+        //    $value = json_encode($value);
         }
 
         if (stripos($rules, 'boolean') !== false) {
