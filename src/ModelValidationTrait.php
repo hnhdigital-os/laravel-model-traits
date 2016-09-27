@@ -75,11 +75,6 @@ trait ModelValidationTrait
 
         $model = static::createModel($update_data);
 
-        if (is_array($model)) {
-            return $result;
-        }
-        $model_class = get_class($model);
-
         // Validation failed.
         if (is_array($model) && $model[0] == true) {
             $result['fields'] = array_keys($model[1]->errors()->messages());
@@ -91,7 +86,7 @@ trait ModelValidationTrait
             $model->save();
 
             if (($model_id = $model->id) > 0) {
-                $model = $model_class::where('id', '=', $model_id)->first();
+                $model = static::where('id', '=', $model_id)->first();
 
                 if (isset($options['on_created']) && $options['on_created'] instanceof \Closure) {
                     $options['on_created']($model, $update_data);
