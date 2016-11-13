@@ -103,9 +103,14 @@ trait ModelValidationTrait
                 ];
 
                 if (!empty($options['success_route'])) {
-                    header('X-FORCE_FRONTEND_REDIRECT: 1');
+                    $route = route(array_get($options, 'success_route', 'home'), [$model->getTable() => $model->uuid]);
 
-                    return route(array_get($options, 'success_route', 'home'), [$model->getTable() => $model->uuid]);
+                    if (request()->ajax()) {
+                        header('X-FORCE_FRONTEND_REDIRECT: 1');
+                        return $route;
+                    }
+
+                    return redirect($route);
                 }
             } else {
                 $result['feedback'] = 'Failed to create record.';
