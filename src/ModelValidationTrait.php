@@ -279,6 +279,10 @@ trait ModelValidationTrait
             $value = (string) $value;
         }
 
+        if (stripos($rules, 'numeric') !== false) {
+            $value = (float) preg_replace('/[^0-9.]*/', '', $value);
+        }
+
         return $value;
     }
 }
