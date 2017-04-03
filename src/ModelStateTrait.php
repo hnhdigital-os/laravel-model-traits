@@ -56,14 +56,14 @@ trait ModelStateTrait
         $query->withoutGlobalScope(SoftDeletingScope::class);
         switch ($mode) {
             case static::$mode_archived:
-                $query = $query->archived();
+                $query = $query->onlyArchived();
                 break;
             case static::$mode_deleted:
-                $query = $query->deleted();
+                $query = $query->onlyDeleted();
                 break;
             case static::$mode_active:
             default:
-                $query = $query->active();
+                $query = $query->onlyActive();
                 break;
         }
 
@@ -75,9 +75,9 @@ trait ModelStateTrait
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeActive($query, $type = true)
+    public function scopeOnlyActive($query, $type = true)
     {
-        return $query->archived(!$type);
+        return $query->onlyArchived(!$type);
     }
 
     /**
@@ -85,7 +85,7 @@ trait ModelStateTrait
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeArchived($query, $type = true)
+    public function scopeOnlyArchived($query, $type = true)
     {
         if (static::getStateDeletedAtColumn()) {
             $query = $query->whereNull(static::getColumnWithTable(static::getStateDeletedAtColumn()));
@@ -106,7 +106,7 @@ trait ModelStateTrait
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeDeleted($query, $type = true)
+    public function scopeOnlyDeleted($query, $type = true)
     {
         if (static::getStateDeletedAtColumn()) {
             if ($type === true) {
