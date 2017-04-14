@@ -40,7 +40,7 @@ trait ModelValidationTrait
         }
 
         foreach ($rules as $attribute_name => $validation) {
-            if (isset($request_values[$attribute_name])) {
+            if (array_has($request_values, $attribute_name)) {
                 $this->{$attribute_name} = $request_values[$attribute_name];
             }
         }
