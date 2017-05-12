@@ -170,11 +170,16 @@ trait ModelValidationTrait
             if ($changes = $this->$dirty_check()) {
                 $this->save();
                 $result['changes'] = $changes;
+            }
 
-                if (isset($options['on_saved']) && $options['on_saved'] instanceof \Closure) {
-                    $options['on_saved']($model, $update_data);
+            if (isset($options['on_saved']) && $options['on_saved'] instanceof \Closure) {
+                $on_saved_changes = $options['on_saved']($model, $update_data);
+                if ($on_saved_changes && !$changes) {
+                    $changes = true;
                 }
-            } else {
+            }
+
+            if (!$changes) {
                 $result['toastr'] = 'info';
                 $result['feedback'] = 'No changes were made.';
             }
@@ -281,6 +286,14 @@ trait ModelValidationTrait
 
         if (stripos($rules, 'numeric') !== false) {
             $value = (float) preg_replace('/[^0-9.]*/', '', $value);
+        }
+
+        if (stripos($rules, 'numeric') !== false || stripos($rules, 'integer') !== false || stripos($rules, 'boolean') !== false) {
+            $value = empty($value) ? 0 : $value;
+        }
+
+        if (is_object($value)) {
+            $value = (string) $value;
         }
 
         return $value;
