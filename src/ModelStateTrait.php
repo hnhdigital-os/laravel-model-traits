@@ -124,7 +124,7 @@ trait ModelStateTrait
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function activateModel()
+    public function activateModel($save = true)
     {
         if (static::getStateArchivedAtColumn()) {
             $this->{static::getStateArchivedAtColumn()} = null;
@@ -132,7 +132,7 @@ trait ModelStateTrait
         if (static::getStateDeletedAtColumn()) {
             $this->{static::getStateDeletedAtColumn()} = null;
         }
-        if (static::getStateArchivedAtColumn() || static::getStateDeletedAtColumn()) {
+        if ($save && (static::getStateArchivedAtColumn() || static::getStateDeletedAtColumn())) {
             $this->save();
         }
     }
@@ -142,14 +142,16 @@ trait ModelStateTrait
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function archiveModel()
+    public function archiveModel($save = true)
     {
         if (static::getStateArchivedAtColumn()) {
             $this->{static::getStateArchivedAtColumn()} = Carbon::now()->toDateTimeString();
             if (static::getStateDeletedAtColumn()) {
                 $this->{static::getStateDeletedAtColumn()} = null;
             }
-            $this->save();
+            if ($save) {
+                $this->save();
+            }
         }
     }
 
@@ -158,11 +160,13 @@ trait ModelStateTrait
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function deleteModel()
+    public function deleteModel($save = true)
     {
         if (static::getStateDeletedAtColumn()) {
             $this->{static::getStateDeletedAtColumn()} = Carbon::now()->toDateTimeString();
-            $this->save();
+            if ($save) {
+                $this->save();
+            }
         }
     }
 
