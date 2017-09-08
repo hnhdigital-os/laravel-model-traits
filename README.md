@@ -4,7 +4,7 @@
 
 Require this package in your `composer.json` file:
 
-`"bluora/laravel-model-traits": "dev-master"`
+`"hnhdigital-os/laravel-model-traits": "dev-master"`
 
 Then run `composer update` to download the package to your vendor directory.
 
