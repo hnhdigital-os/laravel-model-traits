@@ -1,12 +1,12 @@
 {
-    "name": "bluora/laravel-model-traits",
+    "name": "hnhdigital-os/laravel-model-traits",
     "description": "Provides a collection of useful traits for Laravel Eloquent models.",
     "keywords": ["laravel","illuminate","eloquent","uuid"],
     "license": "MIT",
     "authors": [
         {
             "name": "Rocco Howard",
-            "email": "rocco@bluora.com.au"
+            "email": "rocco@hnh.digital"
         }
     ],
     "require": {
