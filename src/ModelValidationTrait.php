@@ -247,7 +247,7 @@ trait ModelValidationTrait
                 }
 
                 // Cast the provided value
-                elseif (isset($request_values[$attribute_name])) {
+                elseif (array_has($request_values, $attribute_name)) {
                     $request_values[$attribute_name] = $this->applyValidationCasting($request_values[$attribute_name], $rules[$attribute_name]);
                 }
 
@@ -257,6 +257,7 @@ trait ModelValidationTrait
                 }
             }
         }
+
         $request_values = array_only($request_values, array_keys($rules));
 
         return $rules;
