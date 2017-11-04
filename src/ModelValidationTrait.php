@@ -85,38 +85,35 @@ trait ModelValidationTrait
             }
             $model->save();
 
-            if (($model_id = $model->id) > 0) {
-                $model = static::where('id', '=', $model_id)->first();
+            $model->fresh();
 
-                if (isset($options['on_created']) && $options['on_created'] instanceof \Closure) {
-                    $options['on_created']($model, $update_data);
+            if (isset($options['on_created']) && $options['on_created'] instanceof \Closure) {
+                $options['on_created']($model, $update_data);
+            }
+
+            $result = [
+                'is_error' => false,
+                'feedback' => 'Created sucessfully.',
+                'toastr'   => 'success',
+                'timeout'  => 2000,
+                'fields'   => [],
+                'model'    => $model,
+                'uuid'     => $model->uuid,
+            ];
+
+            if (!empty($options['success_route'])) {
+                $success_paramaters = array_get($options, 'success_paramaters', []) + config('multisite.default-route-parameters', []);
+
+                $success_paramaters[$model->getTable()] = $model->uuid;
+                $route = route(array_get($options, 'success_route', 'home'), $success_paramaters);
+
+                if (request()->ajax()) {
+                    header('X-FORCE_FRONTEND_REDIRECT: 1');
+                    header('HTTP/1.0 401 Unauthorized');
+                    return $route;
                 }
 
-                $result = [
-                    'is_error' => false,
-                    'feedback' => 'Created sucessfully.',
-                    'toastr'   => 'success',
-                    'timeout'  => 2000,
-                    'fields'   => [],
-                    'model'    => $model,
-                    'uuid'     => $model->uuid,
-                ];
-
-                if (!empty($options['success_route'])) {
-                    $options['success_paramaters'] =  !isset($options['success_paramaters']) ? [] : $options['success_paramaters'];
-                    $options['success_paramaters'][$model->getTable()] = $model->uuid;
-                    $route = route(array_get($options, 'success_route', 'home'), $options['success_paramaters']);
-
-                    if (request()->ajax()) {
-                        header('X-FORCE_FRONTEND_REDIRECT: 1');
-                        header('HTTP/1.0 401 Unauthorized');
-                        return $route;
-                    }
-
-                    return redirect($route);
-                }
-            } else {
-                $result['feedback'] = 'Failed to create record.';
+                return redirect($route);
             }
         }
 
