@@ -26,5 +26,12 @@ trait ModelEventsTrait
                 event(new $class($model));
             }
         });
+
+        static::deleted(function ($model) {
+            $class = '\\App\\Events\\'.substr(strrchr(get_class($model), '\\'), 1).'Deleted';
+            if (class_exists($class)) {
+                event(new $class($model));
+            }
+        });
     }
 }

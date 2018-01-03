@@ -12,40 +12,12 @@ Via composer:
 
 ## Usage
 
-### Model saving
-
-Add or save a model with model based attribute rules.
-
-```php
-use Bluora\LarvelModelTraits\ModelValidationTrait;
-
-class User extends Model
-{
-    use ModelValidationTrait;
-
-}
-```
-
-### Model events
-
-Automatically call an event for created and updated on a model.
-
-```php
-use Bluora\LarvelModelTraits\ModelEventsTrait;
-
-class User extends Model
-{
-    use ModelEventsTrait;
-
-}
-```
-
 ### OrderBy
 
 Adds support for a standard order by.
 
 ```php
-use Bluora\LarvelModelTraits\OrderByTrait;
+use Bluora\\LarvelModelTraits\\OrderByTrait;
 
 class User extends Model
 {
@@ -60,8 +32,10 @@ class User extends Model
 
 Adds support for functions relating to the state of a model provided by the [Eloquent ORM](http://laravel.com/docs/eloquent).
 
+The feature is exposed through a trait by casting your UUID columns as `uuid`.
+
 ```php
-use Bluora\LarvelModelTraits\ModelStateTrait;
+use Bluora\\LarvelModelTraits\\ModelStateTrait;
 
 class User extends Model
 {
