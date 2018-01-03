@@ -13,25 +13,23 @@ trait ModelEventsTrait
     {
         parent::boot();
 
-        static::created(function ($model) {
-            $class = '\\App\\Events\\'.substr(strrchr(get_class($model), '\\'), 1).'Created';
-            if (class_exists($class)) {
-                event(new $class($model));
-            }
-        });
+        $events = [
+            'retrieved', 'creating', 'created', 'updating',
+            'updated', 'deleting', 'deleted', 'saving',
+            'saved', 'restoring', 'restored',
+        ];
 
-        static::updated(function ($model) {
-            $class = '\\App\\Events\\'.substr(strrchr(get_class($model), '\\'), 1).'Updated';
-            if (class_exists($class)) {
-                event(new $class($model));
+        foreach ($events as $event_name) {
+            if (method_exists(__CLASS__, $event_name)) {
+                static::{$event_name}(function ($model) {
+                    $class_name = '\\App\\Events\\'.substr(strrchr(get_class($model), '\\'), 1);
+                    if (class_exists($class = $class_name.'\\Created')) {
+                        event(new $class($model));
+                    } elseif (class_exists($class = $class_name.'Created')) {
+                        event(new $class($model));
+                    }
+                });
             }
-        });
-
-        static::deleted(function ($model) {
-            $class = '\\App\\Events\\'.substr(strrchr(get_class($model), '\\'), 1).'Deleted';
-            if (class_exists($class)) {
-                event(new $class($model));
-            }
-        });
+        }
     }
 }
