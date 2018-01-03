@@ -35,6 +35,7 @@ trait ModelValidationTrait
     {
         $rules = $this->buildValidationArray($existing_model, $request_values);
         $validator = Validator::make($request_values, $rules);
+
         if ($validator->fails()) {
             return [true, $validator];
         }
@@ -85,35 +86,38 @@ trait ModelValidationTrait
             }
             $model->save();
 
-            $model->fresh();
+            if (!empty($model_id = $model->getKey())) {
+                $model = $model->fresh();
 
-            if (isset($options['on_created']) && $options['on_created'] instanceof \Closure) {
-                $options['on_created']($model, $update_data);
-            }
-
-            $result = [
-                'is_error' => false,
-                'feedback' => 'Created sucessfully.',
-                'toastr'   => 'success',
-                'timeout'  => 2000,
-                'fields'   => [],
-                'model'    => $model,
-                'uuid'     => $model->uuid,
-            ];
-
-            if (!empty($options['success_route'])) {
-                $success_paramaters = array_get($options, 'success_paramaters', []) + config('multisite.default-route-parameters', []);
-
-                $success_paramaters[$model->getTable()] = $model->uuid;
-                $route = route(array_get($options, 'success_route', 'home'), $success_paramaters);
-
-                if (request()->ajax()) {
-                    header('X-FORCE_FRONTEND_REDIRECT: 1');
-                    header('HTTP/1.0 401 Unauthorized');
-                    return $route;
+                if (isset($options['on_created']) && $options['on_created'] instanceof \Closure) {
+                    $options['on_created']($model, $update_data);
                 }
 
-                return redirect($route);
+                $result = [
+                    'is_error' => false,
+                    'feedback' => 'Created sucessfully.',
+                    'toastr'   => 'success',
+                    'timeout'  => 2000,
+                    'fields'   => [],
+                    'model'    => $model,
+                    'uuid'     => $model->getKey(),
+                ];
+
+                if (!empty($options['success_route'])) {
+                    $options['success_paramaters'] =  !isset($options['success_paramaters']) ? [] : $options['success_paramaters'];
+                    $options['success_paramaters'][$model->getTable()] = $model->getKey();
+                    $route = route(array_get($options, 'success_route', 'home'), $options['success_paramaters']);
+
+                    if (request()->ajax()) {
+                        header('X-FORCE_FRONTEND_REDIRECT: 1');
+                        header('HTTP/1.0 401 Unauthorized');
+                        return $route;
+                    }
+
+                    return redirect($route);
+                }
+            } else {
+                $result['feedback'] = 'Failed to create record.';
             }
         }
 
@@ -213,8 +217,22 @@ trait ModelValidationTrait
         $rules = [];
         if (isset($this->attribute_rules)) {
             foreach ($this->attribute_rules as $attribute_name => $available_rules) {
+
+                // Ignore primary key is listed in the rules.
+                if ($this->getKeyName() === $attribute_name) {
+                    if (!$existing_model && method_exists($this, 'generateUuidPrimaryKey')) {
+                        $request_values[$attribute_name] = $this->generateUuidPrimaryKey();
+                    }
+                    continue;
+                }
+
+                // Add attribute to the rules array.
                 $rules[$attribute_name] = [];
+
+                // Set the type of validation.
                 $source = ($existing_model) ? static::$RULE_SOURCE_UPDATE : static::$RULE_SOURCE_NEW;
+
+                // Set the style of this attribute.
                 $source_style = $existing_model;
 
                 if (isset($request_values[$attribute_name]) && empty($request_values[$attribute_name])) {
@@ -227,30 +245,42 @@ trait ModelValidationTrait
                     $rules[$attribute_name][] = $available_rules[$source];
                 }
 
+                // Default the rule to sometimes if empty.
                 if ($source_style && $source == static::$RULE_SOURCE_UPDATE) {
                     $rules[$attribute_name][] = 'sometimes';
                 }
 
-                // Add the value type
+                // Add the value type.
                 (isset($available_rules[static::$RULE_SOURCE_FORMAT]) && !empty($available_rules[static::$RULE_SOURCE_FORMAT])) ? $rules[$attribute_name][] = $available_rules[static::$RULE_SOURCE_FORMAT] : false;
 
-                // Stringify the array of rules
+                // Stringify the array of rules.
                 $rules[$attribute_name] = implode('|', $rules[$attribute_name]);
 
-                // Remove where rule is FALSE
+                // Remove where rule is FALSE.
                 if (isset($available_rules[$source]) && $available_rules[$source] === false) {
                     unset($request_values[$attribute_name]);
                     unset($rules[$attribute_name]);
                 }
 
-                // Cast the provided value
+                // Cast the provided value.
                 elseif (array_has($request_values, $attribute_name)) {
-                    $request_values[$attribute_name] = $this->applyValidationCasting($request_values[$attribute_name], $rules[$attribute_name]);
+                    list($value, $additional_rules) = $this->applyValidationCasting($request_values[$attribute_name], $rules[$attribute_name], $existing_model);
+
+                    $request_values[$attribute_name] = $value;
+
+                    if (!empty($additional_rules)) {
+                        $rules[$attribute_name] .= '|'.implode('|', $additional_rules);
+                    }
                 }
 
-                // Cast empty value
+                // Cast empty value.
                 elseif (!empty($available_rules[$source]) && !empty($available_rules[static::$RULE_SOURCE_FORMAT])) {
-                    $request_values[$attribute_name] = $this->applyValidationCasting('', $rules[$attribute_name]);
+                    list($value, $additional_rules) = $this->applyValidationCasting('', $rules[$attribute_name], $existing_model);
+                    $request_values[$attribute_name] = $value;
+
+                    if (!empty($additional_rules)) {
+                        $rules[$attribute_name] .= '|'.implode('|', $additional_rules);
+                    }
                 }
             }
         }
@@ -265,11 +295,14 @@ trait ModelValidationTrait
      *
      * @param mixed  $value
      * @param string $rules
+     * @param bool   $rules
      *
      * @return mixed
      */
-    private function applyValidationCasting($value, $rules)
+    private function applyValidationCasting($value, $rules, $existing_model)
     {
+        $additional_rules = [];
+
         if (stripos($rules, 'json') !== false) {
         //    $value = json_encode($value);
         }
@@ -282,11 +315,20 @@ trait ModelValidationTrait
             $value = (string) $value;
         }
 
+        if (stripos($rules, 'uuid') !== false) {
+            if (empty($value)) {
+                $value = null;
+                $additional_rules[] = 'nullable';
+            } else {
+                $value = (string) $value;
+            }
+        }
+
         if (stripos($rules, 'numeric') !== false) {
             $value = (float) preg_replace('/[^0-9.]*/', '', $value);
         }
 
-        if (stripos($rules, 'numeric') !== false || stripos($rules, 'integer') !== false || stripos($rules, 'boolean') !== false) {
+        if (stripos($rules, 'numeric') !== false || stripos($rules, 'integer') !== false) {
             $value = empty($value) ? 0 : $value;
         }
 
@@ -294,6 +336,6 @@ trait ModelValidationTrait
             $value = (string) $value;
         }
 
-        return $value;
+        return [$value, $additional_rules];
     }
 }
