@@ -5,7 +5,7 @@ namespace Bluora\LaravelModelTraits;
 trait ModelEventsTrait
 {
     /**
-     * Model triggers.
+     * File based model events.
      *
      * @return void
      */
@@ -20,15 +20,22 @@ trait ModelEventsTrait
         ];
 
         foreach ($events as $event_name) {
+            $class_name = '\\App\\Events\\'.substr(strrchr(__CLASS__, '\\'), 1);
+
             if (method_exists(__CLASS__, $event_name)) {
-                static::{$event_name}(function ($model) {
-                    $class_name = '\\App\\Events\\'.substr(strrchr(get_class($model), '\\'), 1);
-                    if (class_exists($class = $class_name.'\\Created')) {
-                        event(new $class($model));
-                    } elseif (class_exists($class = $class_name.'Created')) {
-                        event(new $class($model));
-                    }
-                });
+                $event_class = null;
+
+                if (class_exists($class1 = $class_name.'\\Created')) {
+                    $event_class = $class1;
+                } elseif (class_exists($class2 = $class_name.'Created')) {
+                    $event_class = $class2;
+                }
+
+                if (!is_null($event_class)) {
+                    static::{$event_name}(function ($model) use ($event_class) {
+                        event(new $event_class($model));
+                    });
+                }
             }
         }
     }
