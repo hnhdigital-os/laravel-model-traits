@@ -29,10 +29,23 @@ trait OrderByTrait
             $direction = 'asc';
         }
 
-        if (!empty($field)) {
-            return $query->orderBy(DB::raw($field), $direction);
+        if (stripos($field, '.') !== false) {
+            list($relation_name, $column) = explode('.', $field);
+
+            if (!method_exists($this, $relation_name)) {
+                return;
+            }
+
+            $relationship = $relation_name;
+            app('LaravelModel')->modelJoin($query, $this, $relationship, '=', 'inner');
+            $table_name = array_get($relationship, $relation_name.'.table', false);
+            $query->orderBy(DB::raw('`'.$table_name.'`.`'.$column.'`'), $direction);
+
+            return;
         }
 
-        return $this;
+        if (!empty($field)) {
+            $query->orderBy(DB::raw($field), $direction);
+        }
     }
 }
