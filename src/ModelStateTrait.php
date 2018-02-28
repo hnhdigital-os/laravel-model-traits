@@ -78,7 +78,7 @@ trait ModelStateTrait
      */
     public function scopeOnlyActive($query, $type = true)
     {
-        return $query->onlyArchived(!$type);
+        $query->onlyArchived(!$type);
     }
 
     /**
@@ -98,8 +98,6 @@ trait ModelStateTrait
                 $query = $query->whereNull(static::getColumnWithTable(static::getStateArchivedAtColumn()));
             }
         }
-
-        return $query;
     }
 
     /**
@@ -116,8 +114,6 @@ trait ModelStateTrait
                 $query = $query->whereNull(static::getColumnWithTable(static::getStateDeletedAtColumn()));
             }
         }
-
-        return $query;
     }
 
     /**
