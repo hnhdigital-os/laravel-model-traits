@@ -3,6 +3,7 @@
 namespace Bluora\LaravelModelTraits;
 
 use Carbon\Carbon;
+use HnhDigital\NullCarbon\NullCarbon;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 trait ModelStateTrait
@@ -182,8 +183,15 @@ trait ModelStateTrait
      */
     public function getIsActiveAttribute()
     {
-        return is_null($this->{static::getStateArchivedAtColumn(false)})
-            && is_null($this->{static::getStateDeletedAtColumn(false)});
+        $archived_at = $this->{static::getStateArchivedAtColumn(false)};
+        $deleted_at = $this->{static::getStateDeletedAtColumn(false)};
+
+        if ($archived_at instanceof NullCarbon && $deleted_at instanceof NullCarbon) {
+            return true;
+        }
+
+        return is_null($archived_at)
+            && is_null($deleted_at);
     }
 
     /**
@@ -193,8 +201,15 @@ trait ModelStateTrait
      */
     public function getIsArchivedAttribute()
     {
-        return !is_null($this->{static::getStateArchivedAtColumn(false)})
-            && is_null($this->{static::getStateDeletedAtColumn(false)});
+        $archived_at = $this->{static::getStateArchivedAtColumn(false)};
+        $deleted_at = $this->{static::getStateDeletedAtColumn(false)};
+
+        if ($archived_at instanceof NullCarbon && $deleted_at instanceof NullCarbon) {
+            return true;
+        }
+
+        return is_null($archived_at)
+            && is_null($deleted_at);
     }
 
     /**
@@ -204,7 +219,13 @@ trait ModelStateTrait
      */
     public function getIsDeletedAttribute()
     {
-        return !is_null($this->{static::getStateDeletedAtColumn(false)});
+        $deleted_at = $this->{static::getStateDeletedAtColumn(false)};
+
+        if ($deleted_at instanceof NullCarbon) {
+            return false;
+        }
+
+        return !is_null($deleted_at);
     }
 
     /**
