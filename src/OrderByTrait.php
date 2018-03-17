@@ -29,7 +29,7 @@ trait OrderByTrait
             $direction = 'asc';
         }
 
-        if (preg_match('/^([`a-zA-Z ]*)\.([`a-zA-Z ]*)$/', $field)) {
+        if (preg_match('/^([`a-zA-Z$_]*)\.([`a-zA-Z$_ ]*)$/', $field)) {
             list($relation_name, $column) = explode('.', $field);
 
             if (!method_exists($this, $relation_name)) {
