@@ -41,7 +41,10 @@ class User extends Model
 
 ### OrderBy
 
-Adds support for a standard order by.
+Adds
+* Model default ordering
+* Relation based ordering
+* Supports raw input.
 
 ```php
 use Bluora\LarvelModelTraits\OrderByTrait;
@@ -53,6 +56,12 @@ class User extends Model
     protected $default_order_by = 'name';
     protected $default_order_direction = 'asc';
 }
+```
+
+```
+$model->order('FIELD(status,3,2,1)', 'desc');
+$model->order('other_model.status', 'desc');
+
 ```
 
 ### Model state (Active, Archived, Deleted) Support
