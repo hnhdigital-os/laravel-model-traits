@@ -9,11 +9,11 @@ trait OrderByTrait
     /**
      * Provide a standard method for ordering a model.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string                                $field
-     * @param string                                $direction
+     * @param Builder $query
+     * @param string  $field
+     * @param string  $direction
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     public function scopeOrder($query, $field = '', $direction = '')
     {
@@ -29,7 +29,7 @@ trait OrderByTrait
             $direction = 'asc';
         }
 
-        if (stripos($field, '.') !== false) {
+        if (preg_match('/^([`a-zA-Z ]*)\.([`a-zA-Z ]*)$/', $field)) {
             list($relation_name, $column) = explode('.', $field);
 
             if (!method_exists($this, $relation_name)) {
