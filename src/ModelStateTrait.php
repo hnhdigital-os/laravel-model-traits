@@ -186,12 +186,10 @@ trait ModelStateTrait
         $archived_at = $this->{static::getStateArchivedAtColumn(false)};
         $deleted_at = $this->{static::getStateDeletedAtColumn(false)};
 
-        if ($archived_at instanceof NullCarbon && $deleted_at instanceof NullCarbon) {
+        if (($archived_at instanceof NullCarbon || is_null($archived_at) || $archived_at === false)
+            && ($deleted_at instanceof NullCarbon || is_null($deleted_at) || $deleted_at === false)) {
             return true;
         }
-
-        return is_null($archived_at)
-            && is_null($deleted_at);
     }
 
     /**
@@ -204,12 +202,10 @@ trait ModelStateTrait
         $archived_at = $this->{static::getStateArchivedAtColumn(false)};
         $deleted_at = $this->{static::getStateDeletedAtColumn(false)};
 
-        if ($archived_at instanceof NullCarbon && $deleted_at instanceof NullCarbon) {
+        if (!($archived_at instanceof NullCarbon || is_null($archived_at) || $archived_at === false)
+            && ($deleted_at instanceof NullCarbon || is_null($deleted_at) || $deleted_at === false)) {
             return true;
         }
-
-        return is_null($archived_at)
-            && is_null($deleted_at);
     }
 
     /**
@@ -221,11 +217,11 @@ trait ModelStateTrait
     {
         $deleted_at = $this->{static::getStateDeletedAtColumn(false)};
 
-        if ($deleted_at instanceof NullCarbon) {
+        if ($deleted_at instanceof NullCarbon || is_null($deleted_at) || $deleted_at === false) {
             return false;
         }
 
-        return !is_null($deleted_at);
+        return true;
     }
 
     /**
