@@ -18,26 +18,51 @@ trait ModelStateTrait
         static::addGlobalScope(new ModelStateScope());
     }
 
+    /**
+     * Get the created at column.
+     *
+     * @return string
+     */
     public function getStateCreatedAtColumn()
     {
         return 'created_at';
     }
 
+    /**
+     * Get the updated at column.
+     *
+     * @return string
+     */
     public function getStateUpdatedAtColumn()
     {
         return 'updated_at';
     }
 
+    /**
+     * Get the archived at column.
+     *
+     * @return string
+     */
     public function getStateArchivedAtColumn()
     {
         return 'archived_at';
     }
 
+    /**
+     * Get the deleted at column.
+     *
+     * @return string
+     */
     public function getStateDeletedAtColumn()
     {
         return 'deleted_at';
     }
 
+    /**
+     * Get the created at column.
+     *
+     * @return string
+     */
     public function getColumnWithTable($column)
     {
         return $this->getTable().'.'.$column;
