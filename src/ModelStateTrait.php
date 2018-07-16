@@ -40,7 +40,7 @@ trait ModelStateTrait
 
     public function getColumnWithTable($column)
     {
-        return $this->table.'.'.$column;
+        return $this->getTable().'.'.$column;
     }
 
     public static $mode_active = '0';
