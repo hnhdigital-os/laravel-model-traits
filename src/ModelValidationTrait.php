@@ -105,7 +105,7 @@ trait ModelValidationTrait
 
                 if (!empty($options['success_route'])) {
                     $options['success_paramaters'] =  !isset($options['success_paramaters']) ? [] : $options['success_paramaters'];
-                    $options['success_paramaters'][$model->getTable()] = $model->getKey();
+                    $options['success_paramaters'][$model->getTable()] = $model->uuid ?? $model->getKey();
                     $route = route(array_get($options, 'success_route', 'home'), $options['success_paramaters']);
 
                     if (request()->ajax()) {
