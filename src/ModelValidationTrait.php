@@ -303,6 +303,10 @@ trait ModelValidationTrait
     {
         $additional_rules = [];
 
+        if (stripos($rules, 'nullable') !== false && is_null($value)) {
+            return [$value, $additional_rules];
+        }
+
         if (stripos($rules, 'json') !== false) {
         //    $value = json_encode($value);
         }
