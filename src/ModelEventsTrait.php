@@ -9,10 +9,8 @@ trait ModelEventsTrait
      *
      * @return void
      */
-    public static function boot()
+    public static function bootModelEventsTrait()
     {
-        parent::boot();
-
         $events = [
             'retrieved', 'creating', 'created', 'updating',
             'updated', 'deleting', 'deleted', 'saving',
