@@ -23,9 +23,9 @@ trait ModelEventsTrait
             if (method_exists(__CLASS__, $event_name)) {
                 $event_class = null;
 
-                if (class_exists($class1 = $class_name.'\\Created')) {
+                if (class_exists($class1 = $class_name.'\\'.ucfirst($event_name))) {
                     $event_class = $class1;
-                } elseif (class_exists($class2 = $class_name.'Created')) {
+                } elseif (class_exists($class2 = $class_name.ucfirst($event_name))) {
                     $event_class = $class2;
                 }
 
