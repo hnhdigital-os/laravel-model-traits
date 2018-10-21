@@ -18,9 +18,9 @@ trait ModelEventsTrait
         ];
 
         foreach ($events as $event_name) {
-            $class_name = '\\App\\Events\\'.substr(strrchr(__CLASS__, '\\'), 1);
+            $class_name = '\\App\\Events\\'.substr(strrchr(static::class, '\\'), 1);
 
-            if (method_exists(__CLASS__, $event_name)) {
+            if (method_exists(static::class, $event_name)) {
                 $event_class = null;
 
                 if (class_exists($class1 = $class_name.'\\'.ucfirst($event_name))) {
